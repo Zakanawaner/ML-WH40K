@@ -1,0 +1,42 @@
+--
+function onLoad(save_state)
+  url = 'http://127.0.0.1:5000/'
+  WebRequest.get(url .. "gimme-the-rosters", function(a) gimmeTheRosterResponse(a) end)
+  --local all_objects = getAllObjects()
+  --for o in pairs(all_objects) do
+    --WebRequest.post(url .. "first-scan", all_objects[o].getJSON(), function(a) webRequestCallback(a) end)
+  --end
+  --WebRequest.post(url .. "first-scan", {Done=true}, function(a) webRequestCallback(a) end)
+end
+function rosterSelected(player, option, id)
+    rosterValue = option
+end
+
+function submit_roster(player, value, id)
+    UI.hide("ui_general")
+    WebRequest.post(url .. "enemy-army-generation", {Roster=rosterValue}, function(a) enemyArmyGenerationResponse(a) end)
+end
+--Response function for the enemy army generation
+function enemyArmyGenerationResponse(webReturn)
+    rawEnemyArmy = JSON.decode(webReturn.text)
+    for o in pairs(rawEnemyArmy.ObjectStates) do
+        spawnParams = {
+          json = JSON.encode(rawEnemyArmy.ObjectStates[o]),
+        }
+        print(rawEnemyArmy.ObjectStates[o].Nickname)
+        spawnObjectJSON(spawnParams)
+    end
+end
+function gimmeTheRosterResponse(webReturn)
+    rosters = JSON.decode(webReturn.text)
+    tables = UI.getXmlTable()
+    for i, obj in pairs(rosters.rosters) do
+        tables[2].children[2].children[i+1] = {tag="Option",
+                                               attributes={
+                                                 id="Option-" .. tostring(i+1),
+                                               },
+                                               value=obj,
+                                              }
+        UI.setXmlTable(tables)
+    end
+end
